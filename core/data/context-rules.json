@@ -1,0 +1,120 @@
+{
+  "ambiguous": {
+    "ass": {
+      "safePatterns": [
+        "\\b(?:rode|ride|riding|sitting|seated|upon|on)\\s+(?:an|the|his|her|their|my|your|our)\\s+ass\\b",
+        "\\bass\\s+(?:brayed|brays|braying|carrying|carried|ridden|rode|walking|walked|stood|standing|tied|bound|loaded|saddled)\\b",
+        "\\b(?:donkey|mule|beast of burden|burro|jenny|jack)\\b.{0,30}\\bass\\b",
+        "\\bass\\s+(?:and|or)\\s+(?:donkey|mule|colt|foal|horse|ox|camel)\\b",
+        "\\bbeast of burden\\b",
+        "\\b(?:an|the)\\s+ass\\s+(?:brayed|carrying|who|which|that)\\b"
+      ],
+      "profanePatterns": [
+        "\\b(?:kick|kicked|kicking)\\s+(?:your|his|her|their|my|our)\\s+ass\\b",
+        "\\b(?:your|his|her|their|my|our|stupid|dumb|lazy|fat|sorry|smart|poor|rich|big|little|damn|goddamn)\\s+ass\\b",
+        "\\bpain in the ass\\b",
+        "\\bass\\s+(?:face|hat|wipe|clown|hole)\\b",
+        "\\b(?:get|got|gets|getting)\\s+(?:your|his|her|their|my|our)\\s+ass\\b",
+        "\\b(?:move|moving|shake|shaking)\\s+(?:your|his|her|their|my|our)\\s+ass\\b",
+        "\\b(?:save|saved|saving)\\s+(?:your|his|her|their|my|our)\\s+ass\\b",
+        "\\b(?:whoop|whooped|whooping)\\s+(?:your|his|her|their|my|our)\\s+ass\\b"
+      ],
+      "defaultAction": "skip"
+    },
+    "hell": {
+      "safePatterns": [
+        "\\bhell-bent\\b",
+        "\\b(?:the|into|from|through|gates of|depths of|fires of)\\s+hell\\b",
+        "\\bhell\\s+(?:is|was|shall|will|hath|hast)\\b",
+        "\\b(?:raise|raised|raising)\\s+hell\\b",
+        "\\b(?:all|pure|living|absolute|complete)\\s+hell\\b"
+      ],
+      "profanePatterns": [
+        "\\bwhat the hell\\b",
+        "\\bhow the hell\\b",
+        "\\bwhere the hell\\b",
+        "\\bwho the hell\\b",
+        "\\bwhy the hell\\b",
+        "\\bthe hell\\s+(?:with|out of|you|he|she|they|it|we)\\b",
+        "\\bgo to hell\\b",
+        "\\b(?:like|as)\\s+hell\\b",
+        "\\bhell yeah\\b",
+        "\\bhell no\\b",
+        "\\bto hell with\\b"
+      ],
+      "defaultAction": "context"
+    },
+    "damn": {
+      "safePatterns": [
+        "\\bdamn the torpedoes\\b",
+        "\\bdamn\\s+(?:you|him|her|them|it|us|me)\\s+to\\b",
+        "\\b(?:not|never|hardly)\\s+worth a damn\\b"
+      ],
+      "profanePatterns": [
+        "\\bdamn\\s+(?:you|him|her|them|it|us|me|right|well|it all)\\b",
+        "\\bgoddamn\\b",
+        "\\bgod damn\\b",
+        "\\bdamned\\s+(?:if|right|well|sure)\\b",
+        "\\bwhat the damn\\b"
+      ],
+      "defaultAction": "context"
+    },
+    "bitch": {
+      "safePatterns": [
+        "\\b(?:female|male|hunting|breed|breeding|show|prize|purebred|spayed|neutered|stray|wild)\\s+bitch\\b",
+        "\\bbitch\\s+(?:whelped|whelping|in heat|had pups|had puppies|was bred|is bred)\\b",
+        "\\b(?:the|a|an)\\s+bitch\\s+(?:and|with)\\s+(?:her|its)\\s+(?:pups|puppies|litter)\\b",
+        "\\bbitch\\s+(?:is|was|has|had)\\s+(?:in heat|whelped|bred)\\b"
+      ],
+      "profanePatterns": [
+        "\\b(?:you|stupid|selfish|spoiled|rich|poor|little|fucking|goddamn|lazy|crazy|psycho|lying|cheating)\\s+bitch\\b",
+        "\\bbitch\\s+(?:please|slap|slapped|slapping|about|ass|face)\\b",
+        "\\b(?:son of a|sons of a)\\s+bitch\\b",
+        "\\bbe(?:ing)?\\s+a\\s+bitch\\b"
+      ],
+      "defaultAction": "skip"
+    },
+    "cock": {
+      "safePatterns": [
+        "\\b(?:the|a|an|his|her|their|my|your|our|that|this|old|young|red|black|white|fighting|game|bantam|rooster)\\s+cock\\b",
+        "\\bcock\\s+(?:crowed|crows|crowing|crow|a-doodle|fight|fights|fighting|pit|pits)\\b",
+        "\\b(?:pea)?cock\\b",
+        "\\bcockatoo\\b",
+        "\\bcockatiel\\b",
+        "\\bcockpit\\b",
+        "\\bcockroach\\b"
+      ],
+      "profanePatterns": [
+        "\\b(?:suck|sucked|sucking|sucks)\\s+(?:my|his|her|their|your|our|a|the)\\s+cock\\b",
+        "\\b(?:big|huge|massive|hard|fat|little|tiny)\\s+cock\\b",
+        "\\bcock\\s+(?:sucker|suckers|head|heads)\\b"
+      ],
+      "defaultAction": "skip"
+    },
+    "suck": {
+      "safePatterns": [
+        "\\bsuck(?:ed|ing|s)?\\s+(?:air|wind|water|blood|juice|fluid|moisture|oxygen|vacuum|the life|the marrow|the poison|the venom)\\b",
+        "\\b(?:vacuum|pump|straw|tube|hose)\\s+(?:can|will|to)\\s+suck\\b"
+      ],
+      "profanePatterns": [
+        "\\b(?:you|that|this|it|they|he|she)\\s+suck(?:s|ed|ing)?\\b",
+        "\\bsuck(?:s|ed|ing)?\\s+(?:my|his|her|their|your|our|at|off|up)\\b",
+        "\\bsucks\\s+(?:to be|ass|balls|dick|cock)\\b"
+      ],
+      "defaultAction": "context"
+    },
+    "crap": {
+      "safePatterns": [
+        "\\bcrap\\s+game\\b",
+        "\\bshoot(?:ing)?\\s+craps\\b"
+      ],
+      "profanePatterns": [
+        "\\b(?:full|load|piece|pile|load|bucket|bunch|load)\\s+of\\s+crap\\b",
+        "\\b(?:what|this|that|total|complete|absolute)\\s+crap\\b",
+        "\\b(?:talk|talking|talked)\\s+crap\\b",
+        "\\b(?:cut|cutting)\\s+the\\s+crap\\b"
+      ],
+      "defaultAction": "context"
+    }
+  }
+}

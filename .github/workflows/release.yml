@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Golden tests
+        run: cd core && node --test tests/filter.test.js
+
+  build-apk:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.11.1"
+      - name: Sync filter assets
+        run: cp core/data/*.json android/app/src/main/assets/
+      - name: Build debug APK
+        run: cd android && gradle assembleDebug --no-daemon
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GentleInk-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+  package:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package plugins
+        run: |
+          mkdir -p dist
+          cp core/data/*.json calibre-plugin/gentleink/core_data/
+          cd calibre-plugin && zip -r ../dist/gentleink-calibre.zip gentleink
+          cd ../koreader-plugin && zip -r ../dist/gentleink-koreader.zip gentleink.koplugin
+          cd ..
+          sha256sum dist/* > dist/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GentleInk-plugins
+          path: dist/

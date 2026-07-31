@@ -1,0 +1,7 @@
+{
+  "name": "GentleInk Language Filter",
+  "description": "Context-aware profanity filter for ebooks (GentleInk rules)",
+  "version": "0.1.0",
+  "author": "GentleInk",
+  "minimum_calibre_version": "6.0.0"
+}

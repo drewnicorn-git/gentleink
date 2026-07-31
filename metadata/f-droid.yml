@@ -1,0 +1,44 @@
+Categories:
+  - Reading
+License: MIT
+AuthorName: GentleInk
+SourceCode: https://github.com/gentleink/gentleink
+IssueTracker: https://github.com/gentleink/gentleink/issues
+
+AutoName: GentleInk
+Summary: Wholesome EPUB reading with context-aware profanity filtering
+Description: |
+  GentleInk filters profanity from ebooks while you read, using smart context
+  rules that preserve innocent words like bass, assassin, and donkey references.
+
+  Features:
+  - Substitute, mask, or remove profanity
+  - Family and Religious Strict profiles
+  - All processing on-device — no network, no account
+  - Import DRM-free EPUB files
+
+  DRM-protected Kindle/Kobo books must be pre-cleaned with the Calibre plugin.
+
+  Named to avoid confusion with the deprecated Clean Reader app.
+
+RepoType: git
+Repo: https://github.com/gentleink/gentleink.git
+
+Builds:
+  - versionName: "0.1.0"
+    versionCode: 1
+    commit: v0.1.0
+    subdir: android
+    gradle:
+      - assembleRelease
+    scandelete:
+      - core/node_modules
+    prebuild:
+      - cp ../core/data/*.json app/src/main/assets/
+    output: app/build/outputs/apk/release/app-release.apk
+
+UpdateCheckMode: Tags
+CurrentVersion: 0.1.0
+CurrentVersionCode: 1
+
+NoSourceSince: 0.1.0

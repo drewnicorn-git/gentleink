@@ -1,0 +1,32 @@
+# Build outputs
+dist/
+**/build/
+**/.gradle/
+**/local.properties
+*.apk
+*.aab
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Node (golden test runner)
+node_modules/
+
+# Secrets
+*.keystore
+*.jks
+keystore.properties
+android/keystore/
+.env
