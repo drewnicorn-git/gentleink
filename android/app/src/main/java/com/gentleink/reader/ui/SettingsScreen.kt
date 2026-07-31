@@ -2,7 +2,8 @@ package com.gentleink.reader.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,13 +14,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenu
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -36,7 +35,7 @@ import com.gentleink.reader.filter.FilterMode
 import com.gentleink.reader.filter.FilterProfile
 import com.gentleink.reader.filter.GentleInkFilter
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(
     filter: GentleInkFilter,
@@ -47,9 +46,6 @@ fun SettingsScreen(
     onBack: () -> Unit
 ) {
     var sample by remember { mutableStateOf("What the hell! Move your ass or I will kick your ass.") }
-    var modeExpanded by remember { mutableStateOf(false) }
-    var profileExpanded by remember { mutableStateOf(false) }
-
     val result = remember(sample, mode, profile) { filter.filterText(sample, mode, profile) }
 
     Scaffold(
@@ -74,43 +70,27 @@ fun SettingsScreen(
         ) {
             Text("Filter settings apply to all books.", fontWeight = FontWeight.SemiBold)
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ExposedDropdownMenuBox(expanded = modeExpanded, onExpandedChange = { modeExpanded = it }, modifier = Modifier.weight(1f)) {
-                    OutlinedTextField(
-                        readOnly = true,
-                        value = mode.name.lowercase().replaceFirstChar { it.titlecase() },
-                        onValueChange = {},
-                        label = { Text("Mode") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modeExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
+            Text("Mode", fontWeight = FontWeight.Medium)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterMode.entries.forEach { item ->
+                    FilterChip(
+                        selected = mode == item,
+                        onClick = { onModeChange(item) },
+                        label = { Text(item.name.lowercase().replaceFirstChar { it.titlecase() }) }
                     )
-                    ExposedDropdownMenu(expanded = modeExpanded, onDismissRequest = { modeExpanded = false }) {
-                        FilterMode.entries.forEach { item ->
-                            DropdownMenuItem(
-                                text = { Text(item.name.lowercase().replaceFirstChar { c -> c.titlecase() }) },
-                                onClick = { onModeChange(item); modeExpanded = false }
-                            )
-                        }
-                    }
                 }
+            }
 
-                ExposedDropdownMenuBox(expanded = profileExpanded, onExpandedChange = { profileExpanded = it }, modifier = Modifier.weight(1f)) {
-                    OutlinedTextField(
-                        readOnly = true,
-                        value = profile.name.replace('_', ' ').lowercase().replaceFirstChar { it.titlecase() },
-                        onValueChange = {},
-                        label = { Text("Profile") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = profileExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
-                    )
-                    ExposedDropdownMenu(expanded = profileExpanded, onDismissRequest = { profileExpanded = false }) {
-                        FilterProfile.entries.forEach { item ->
-                            DropdownMenuItem(
-                                text = { Text(item.name.replace('_', ' ').lowercase().replaceFirstChar { c -> c.titlecase() }) },
-                                onClick = { onProfileChange(item); profileExpanded = false }
-                            )
+            Text("Profile", fontWeight = FontWeight.Medium)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterProfile.entries.forEach { item ->
+                    FilterChip(
+                        selected = profile == item,
+                        onClick = { onProfileChange(item) },
+                        label = {
+                            Text(item.name.replace('_', ' ').lowercase().replaceFirstChar { it.titlecase() })
                         }
-                    }
+                    )
                 }
             }
 
@@ -132,7 +112,7 @@ fun SettingsScreen(
                 "Substitute replaces profanity with mild words (heck, poop, butt). " +
                     "Mask uses asterisks. Remove deletes matched words. " +
                     "DRM-protected Kindle/Kobo books must be cleaned via Calibre first.",
-                style = androidx.compose.material3.MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall
             )
         }
     }
@@ -147,7 +127,7 @@ fun OnboardingScreen(onContinue: () -> Unit) {
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text("Welcome to GentleInk", style = androidx.compose.material3.MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Text("Welcome to GentleInk", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Text("Wholesome reading on every page.")
         Text("• Import DRM-free EPUB files")
         Text("• Profanity is filtered as you read — substitutes like heck for hell")
