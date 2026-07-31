@@ -63,9 +63,10 @@ jobs:
 
   publish-release:
     needs: [build-apk, package]
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: always() && startsWith(github.ref, 'refs/tags/v') && needs.package.result == 'success'
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           pattern: GentleInk-*
@@ -74,14 +75,16 @@ jobs:
       - name: Prepare release files
         run: |
           mkdir -p upload
-          cp release-assets/app-debug.apk upload/GentleInk-0.1.0.apk
+          if [ -f release-assets/app-debug.apk ]; then
+            cp release-assets/app-debug.apk upload/GentleInk-0.1.0.apk
+          fi
           cp release-assets/gentleink-calibre-0.1.0.zip upload/
           cp release-assets/gentleink-koreader-0.1.0.zip upload/
           cp release-assets/SHA256SUMS.txt upload/
           cp docs/INSTALL.md upload/INSTALL.md
+          ls -la upload/
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: upload/*
           generate_release_notes: true
-          body_path: docs/INSTALL.md

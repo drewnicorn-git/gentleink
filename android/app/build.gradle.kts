@@ -4,6 +4,8 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+import java.util.Properties
+
 android {
     namespace = "com.gentleink.reader"
     compileSdk = 35
@@ -21,7 +23,7 @@ android {
         create("release") {
             val keystorePropertiesFile = rootProject.file("keystore.properties")
             if (keystorePropertiesFile.exists()) {
-                val keystoreProperties = java.util.Properties().apply {
+                val keystoreProperties = Properties().apply {
                     load(keystorePropertiesFile.inputStream())
                 }
                 storeFile = file(keystoreProperties["storeFile"] as String)
