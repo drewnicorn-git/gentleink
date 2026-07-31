@@ -1,0 +1,87 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Golden tests
+        run: cd core && node --test tests/filter.test.js
+
+  build-apk:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.11.1"
+      - name: Sync filter assets
+        run: cp core/data/*.json android/app/src/main/assets/
+      - name: Build debug APK
+        run: cd android && gradle assembleDebug --no-daemon
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GentleInk-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+  package:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package plugins
+        run: |
+          mkdir -p dist
+          cp core/data/*.json calibre-plugin/gentleink/core_data/
+          cd calibre-plugin && zip -r ../dist/gentleink-calibre-0.1.0.zip gentleink
+          cd ../koreader-plugin && zip -r ../dist/gentleink-koreader-0.1.0.zip gentleink.koplugin
+          cd ..
+          sha256sum dist/* > dist/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GentleInk-plugins
+          path: dist/
+
+  publish-release:
+    needs: [build-apk, package]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: GentleInk-*
+          merge-multiple: true
+          path: release-assets
+      - name: Prepare release files
+        run: |
+          mkdir -p upload
+          cp release-assets/app-debug.apk upload/GentleInk-0.1.0.apk
+          cp release-assets/gentleink-calibre-0.1.0.zip upload/
+          cp release-assets/gentleink-koreader-0.1.0.zip upload/
+          cp release-assets/SHA256SUMS.txt upload/
+          cp docs/INSTALL.md upload/INSTALL.md
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: upload/*
+          generate_release_notes: true
+          body_path: docs/INSTALL.md
