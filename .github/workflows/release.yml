@@ -88,3 +88,4 @@ jobs:
         with:
           files: upload/*
           generate_release_notes: true
+          overwrite: true
