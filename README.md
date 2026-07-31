@@ -26,6 +26,18 @@ Named to avoid confusion with the 2015 *Clean Reader* app and the *CleanRead* Ca
 - **Family** — mild substitutions (`heck`, `poop`, `fudge`)
 - **Religious Strict** — stronger neutral replacements (`goodness`, `darn`, `person`)
 
+## Download
+
+**Latest release:** [v0.1.0 on GitHub Releases](https://github.com/drewnicorn-git/gentleink/releases/tag/v0.1.0)
+
+| Asset | For |
+|---|---|
+| `GentleInk-0.1.0.apk` | Android e-readers (Boox, Onyx, Xteink S4, etc.) |
+| `gentleink-calibre-0.1.0.zip` | Calibre desktop plugin |
+| `gentleink-koreader-0.1.0.zip` | KOReader plugin |
+
+See [docs/INSTALL.md](docs/INSTALL.md) for install steps.
+
 ## Release packaging
 
 ```powershell
