@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import pkgutil
 import re
+import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -11,20 +13,51 @@ from typing import Literal
 Mode = Literal["remove", "mask", "substitute"]
 Profile = Literal["family", "religious_strict"]
 
+PLUGIN_PKG = "calibre_plugins.gentleink"
 DATA_DIR = Path(__file__).resolve().parent / "core_data"
 
 
+def _plugin_zip_path() -> Path | None:
+    for i, part in enumerate(Path(__file__).parts):
+        if part.lower().endswith(".zip"):
+            return Path(*Path(__file__).parts[: i + 1])
+    return None
+
+
 def _load_plugin_json(filename: str) -> dict:
-    """Load bundled JSON; works when the plugin runs from Calibre's zip importer."""
+    """Load bundled JSON from Calibre's zip plugin or local dev tree."""
+    resource = f"core_data/{filename}"
+
+    data = pkgutil.get_data(PLUGIN_PKG, resource)
+    if data is not None:
+        return json.loads(data.decode("utf-8"))
+
+    zip_path = _plugin_zip_path()
+    if zip_path is not None:
+        with zipfile.ZipFile(zip_path, "r") as zf:
+            for name in (resource, filename):
+                try:
+                    return json.loads(zf.read(name).decode("utf-8"))
+                except KeyError:
+                    continue
+
     base = Path(__file__).resolve().parent
+    fs_path = base / "core_data" / filename
     try:
-        with open(base / "core_data" / filename, encoding="utf-8") as f:
+        with open(fs_path, encoding="utf-8") as f:
             return json.load(f)
     except (FileNotFoundError, OSError):
         pass
-    # Dev fallback when running from the repo without packaged core_data
-    with open(base.parents[2] / "core" / "data" / filename, encoding="utf-8") as f:
-        return json.load(f)
+
+    dev_path = base.parents[2] / "core" / "data" / filename
+    if dev_path.is_file():
+        with open(dev_path, encoding="utf-8") as f:
+            return json.load(f)
+
+    raise FileNotFoundError(
+        f"GentleInk data file not found: {filename} "
+        f"(checked {PLUGIN_PKG}:{resource}, plugin zip, {fs_path}, {dev_path})"
+    )
 
 
 @dataclass
