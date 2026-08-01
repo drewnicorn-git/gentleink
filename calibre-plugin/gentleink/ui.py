@@ -22,7 +22,7 @@ class GentleInkInterfaceAction(InterfaceAction):
     def run_clean(self):
         from .action import clean_selected_books
 
-        db = self.gui.current_db
+        db = getattr(self.gui.current_db, "new_api", self.gui.current_db)
         ids = self.gui.library_view.get_selected_ids()
         if not ids:
             QMessageBox.warning(self.gui, "GentleInk", "Select one or more books first.")

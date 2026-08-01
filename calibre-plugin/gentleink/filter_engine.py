@@ -171,6 +171,10 @@ class GentleInkFilter:
 
     @staticmethod
     def _preserve_case(original: str, replacement: str) -> str:
+        if not original:
+            return replacement
+        if not replacement:
+            return original
         if original.isupper():
             return replacement.upper()
         if original[0].isupper():

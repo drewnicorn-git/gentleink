@@ -15,11 +15,26 @@ HTML_EXT = {".xhtml", ".html", ".htm"}
 FORMAT_PREFERENCE = ("epub", "azw3")
 
 
+def _library_api(db):
+    """Prefer new_api (book ids); fall back to legacy LibraryDatabase."""
+    return getattr(db, "new_api", db)
+
+
+def _book_title(db, book_id) -> str:
+    api = _library_api(db)
+    if hasattr(api, "field_for"):
+        return api.field_for("title", book_id) or f"ID {book_id}"
+    return db.title(book_id, index_is_id=True)
+
+
 def _book_formats(db, book_id) -> list[str]:
+    api = _library_api(db)
+    if hasattr(api, "field_for"):
+        return list(api.formats(book_id) or [])
     try:
-        return list(db.formats(book_id, verify_exists=True))
+        return list(db.formats(book_id, verify_exists=True, index_is_id=True))
     except TypeError:
-        return list(db.formats(book_id))
+        return list(db.formats(book_id, index_is_id=True))
 
 
 def _pick_format(formats: list[str]) -> str | None:
@@ -82,33 +97,50 @@ def clean_epub_file(path: str, engine: GentleInkFilter, mode: str = "substitute"
 
 
 def backup_original(db, book_id, fmt: str) -> None:
-    backup_fmt = f"ORIGINAL_{fmt.upper()}"
+    api = _library_api(db)
+    fmt_upper = fmt.upper()
     formats = _book_formats(db, book_id)
-    if fmt.upper() not in {f.upper() for f in formats}:
+    if fmt_upper not in {f.upper() for f in formats}:
         return
+    backup_fmt = f"ORIGINAL_{fmt_upper}"
     if backup_fmt in formats:
         return
 
-    api = getattr(db, "new_api", None)
-    if api is not None and hasattr(api, "save_original_format"):
-        api.save_original_format(book_id, fmt.upper())
+    if hasattr(api, "save_original_format"):
+        api.save_original_format(book_id, fmt_upper)
         return
 
-    path = db.format(book_id, fmt)
+    if hasattr(api, "field_for"):
+        path = api.format(book_id, fmt)
+    else:
+        path = db.format(book_id, fmt, index_is_id=True)
     with open(path, "rb") as f:
-        db.add_format(book_id, backup_fmt, f, replace=False)
+        if hasattr(api, "field_for"):
+            api.add_format(book_id, backup_fmt, f, replace=False)
+        else:
+            db.add_format(book_id, backup_fmt, f, replace=False, index_is_id=True)
 
 
 def _export_format(db, book_id, fmt: str) -> str:
+    api = _library_api(db)
     fd, tmp_path = tempfile.mkstemp(suffix=f".{fmt.lower()}")
     os.close(fd)
-    db.copy_format_to(book_id, fmt.upper(), tmp_path)
+    fmt_upper = fmt.upper()
+    if hasattr(api, "field_for"):
+        api.copy_format_to(book_id, fmt_upper, tmp_path)
+    else:
+        db.copy_format_to(book_id, fmt_upper, tmp_path, index_is_id=True)
     return tmp_path
 
 
 def _import_format(db, book_id, fmt: str, path: str) -> None:
-    with open(path, "rb") as f:
-        db.add_format(book_id, fmt.upper(), f, replace=True)
+    api = _library_api(db)
+    fmt_upper = fmt.upper()
+    if hasattr(api, "field_for"):
+        api.add_format(book_id, fmt_upper, path, replace=True)
+    else:
+        with open(path, "rb") as f:
+            db.add_format(book_id, fmt_upper, f, replace=True, index_is_id=True)
 
 
 def clean_selected_books(db, book_ids, gui=None) -> list[dict]:
@@ -120,7 +152,7 @@ def clean_selected_books(db, book_ids, gui=None) -> list[dict]:
 
     results = []
     for book_id in book_ids:
-        title = db.title(book_id, index_is_id=True)
+        title = _book_title(db, book_id)
         tmp_path = None
         try:
             fmt = _pick_format(_book_formats(db, book_id))
