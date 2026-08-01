@@ -91,6 +91,53 @@
       ],
       "defaultAction": "skip"
     },
+    "dick": {
+      "safePatterns": [
+        "\\bMoby-Dick\\b",
+        "\\bDick\\s+(?:Grayson|Van Dyke|ens|inson|ensian|on|Tracy|Turpin)\\b",
+        "\\b(?:Richard|Dick)\\s+[A-Z][a-z]+\\b",
+        "\\bdickens\\b",
+        "\\bdickinson\\b"
+      ],
+      "profanePatterns": [
+        "\\b(?:suck|sucked|sucking|sucks)\\s+(?:my|his|her|their|your|our|a|the)\\s+dick\\b",
+        "\\bdick\\s+(?:head|face|wad|weed|hole)\\b",
+        "\\b(?:big|little|tiny|huge|massive)\\s+dick\\b",
+        "\\bwhat a dick\\b",
+        "\\b(?:being|be)\\s+a\\s+dick\\b",
+        "\\b(?:that|you|such a|a)\\s+dick\\b"
+      ],
+      "defaultAction": "skip"
+    },
+    "balls": {
+      "safePatterns": [
+        "\\b(?:base|basket|foot|soccer|tennis|golf|pool|bowling|piano|medicine|snow|crystal|cue|dragon|meat|eye|cheese|stress|ball)\\s+balls\\b",
+        "\\bballs\\s+(?:and strikes|in the air|on the|of the|to the wall)\\b",
+        "\\b(?:play|playing|played|throw|threw|catch|caught|hit|hits|hitting)\\s+(?:the\\s+)?balls\\b"
+      ],
+      "profanePatterns": [
+        "\\b(?:suck|sucked|sucking)\\s+(?:my|his|her|their|your|our)\\s+balls\\b",
+        "\\b(?:big|huge|massive)\\s+balls\\b",
+        "\\bhave the balls\\b",
+        "\\bbreak\\s+(?:my|his|her|their|your|our)\\s+balls\\b",
+        "\\b(?:brass|big)\\s+balls\\b"
+      ],
+      "defaultAction": "skip"
+    },
+    "screw": {
+      "safePatterns": [
+        "\\b(?:machine|wood|metal|Phillips|flathead|hex|lag|set|cap|thumb|self-tapping|torx|drywall)\\s+screw\\b",
+        "\\bscrew\\s+(?:driver|drivers|thread|threads|head|heads|cap|capped|in|into|on|tight|loose|turn|turned|turning)\\b",
+        "\\b(?:tighten|loosen|remove|removed|removing|insert|inserted|inserting)\\s+(?:the\\s+)?screw\\b"
+      ],
+      "profanePatterns": [
+        "\\bscrew\\s+(?:you|him|her|them|it|us|me|that|this|off|up)\\b",
+        "\\b(?:got|get|getting)\\s+screwed\\b",
+        "\\bscrewed\\s+(?:up|over|that|this|us|me|him|her|them|badly|hard)\\b",
+        "\\bwhat the screw\\b"
+      ],
+      "defaultAction": "context"
+    },
     "suck": {
       "safePatterns": [
         "\\bsuck(?:ed|ing|s)?\\s+(?:air|wind|water|blood|juice|fluid|moisture|oxygen|vacuum|the life|the marrow|the poison|the venom)\\b",

@@ -42,6 +42,8 @@ function isContractionSpan(text, start, end, contractions) {
 }
 
 function preserveCase(original, replacement) {
+  if (!original) return replacement;
+  if (!replacement) return original;
   if (original === original.toUpperCase()) return replacement.toUpperCase();
   if (original[0] === original[0].toUpperCase()) {
     return replacement.charAt(0).toUpperCase() + replacement.slice(1);
