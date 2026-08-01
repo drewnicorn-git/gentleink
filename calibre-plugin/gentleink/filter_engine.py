@@ -14,6 +14,19 @@ Profile = Literal["family", "religious_strict"]
 DATA_DIR = Path(__file__).resolve().parent / "core_data"
 
 
+def _load_plugin_json(filename: str) -> dict:
+    """Load bundled JSON; works when the plugin runs from Calibre's zip importer."""
+    base = Path(__file__).resolve().parent
+    try:
+        with open(base / "core_data" / filename, encoding="utf-8") as f:
+            return json.load(f)
+    except (FileNotFoundError, OSError):
+        pass
+    # Dev fallback when running from the repo without packaged core_data
+    with open(base.parents[2] / "core" / "data" / filename, encoding="utf-8") as f:
+        return json.load(f)
+
+
 @dataclass
 class FilterMatch:
     word: str
@@ -25,11 +38,17 @@ class FilterMatch:
 
 
 class GentleInkFilter:
-    def __init__(self, data_dir: Path = DATA_DIR):
-        allowlist = json.loads((data_dir / "allowlist.json").read_text(encoding="utf-8"))
-        tier1 = json.loads((data_dir / "tier1-unambiguous.json").read_text(encoding="utf-8"))
-        context = json.loads((data_dir / "context-rules.json").read_text(encoding="utf-8"))
-        subs = json.loads((data_dir / "substitutions.json").read_text(encoding="utf-8"))
+    def __init__(self, data_dir: Path | None = None):
+        if data_dir is None:
+            allowlist = _load_plugin_json("allowlist.json")
+            tier1 = _load_plugin_json("tier1-unambiguous.json")
+            context = _load_plugin_json("context-rules.json")
+            subs = _load_plugin_json("substitutions.json")
+        else:
+            allowlist = json.loads((data_dir / "allowlist.json").read_text(encoding="utf-8"))
+            tier1 = json.loads((data_dir / "tier1-unambiguous.json").read_text(encoding="utf-8"))
+            context = json.loads((data_dir / "context-rules.json").read_text(encoding="utf-8"))
+            subs = json.loads((data_dir / "substitutions.json").read_text(encoding="utf-8"))
 
         self.compounds = {w.lower() for w in allowlist["compounds"]}
         self.contractions = {w.lower() for w in allowlist["contractions"]}

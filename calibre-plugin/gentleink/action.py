@@ -76,7 +76,7 @@ def clean_selected_books(db, book_ids, gui=None) -> list[dict]:
 
     mode = plugin_prefs.get("mode", "substitute")
     profile = plugin_prefs.get("profile", "family")
-    engine = GentleInkFilter(_resolve_data_dir())
+    engine = GentleInkFilter()
 
     results = []
     for book_id in book_ids:
@@ -99,10 +99,3 @@ def clean_selected_books(db, book_ids, gui=None) -> list[dict]:
         gui.library_view.model().refresh_ids(book_ids)
     return results
 
-
-def _resolve_data_dir() -> Path:
-    bundled = Path(__file__).resolve().parent / "core_data"
-    if bundled.exists():
-        return bundled
-    repo = Path(__file__).resolve().parents[2] / "core" / "data"
-    return repo
