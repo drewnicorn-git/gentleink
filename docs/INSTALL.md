@@ -42,6 +42,17 @@ GentleInk ships three components. Most e-reader users want the **Android APK**.
 
 Original files are backed up as `ORIGINAL_EPUB` inside each library entry.
 
+### Test the plugin
+
+Download a sample EPUB and run **GentleInk Clean** to confirm filtering works on your machine:
+
+| File | Best for |
+|---|---|
+| [`gentleink-filter-test-story.epub`](../calibre-plugin/test-fixtures/gentleink-filter-test-story.epub) | Natural dialogue; profanity highlighted in yellow |
+| [`gentleink-filter-test.epub`](../calibre-plugin/test-fixtures/gentleink-filter-test.epub) | Labeled chapters (compounds, safe context, profane usage) |
+
+Both are included in every [GitHub release](https://github.com/drewnicorn-git/gentleink/releases) and live in [`calibre-plugin/test-fixtures/`](../calibre-plugin/test-fixtures/). See that folder’s [README](../calibre-plugin/test-fixtures/README.md) for what should and should not change.
+
 ### Calibre install error: "must contain a top-level __init__.py"
 
 Older release zips (`gentleink-calibre-0.1.0.zip`) nested files inside a `gentleink/` folder, which Calibre rejects. Use **`gentleink.zip`** from v0.1.1 or later, or rebuild locally:

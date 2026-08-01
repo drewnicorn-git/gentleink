@@ -38,6 +38,13 @@ Named to avoid confusion with the 2015 *Clean Reader* app and the *CleanRead* Ca
 
 See [docs/INSTALL.md](docs/INSTALL.md) for install steps.
 
+### Test EPUBs (Calibre / Android)
+
+After installing, verify filtering with sample books in [`calibre-plugin/test-fixtures/`](calibre-plugin/test-fixtures/) — also attached to each release:
+
+- **`gentleink-filter-test-story.epub`** — novella with yellow-highlighted profanity (recommended)
+- **`gentleink-filter-test.epub`** — labeled chapter checklist
+
 ## Release packaging
 
 ```powershell

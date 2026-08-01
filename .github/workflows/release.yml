@@ -57,6 +57,8 @@ jobs:
           cp ../../dist/gentleink.zip "../../dist/gentleink-calibre-${VERSION}.zip"
           cd ../../koreader-plugin && zip -r "../dist/gentleink-koreader-${VERSION}.zip" gentleink.koplugin
           cd ..
+          cp calibre-plugin/test-fixtures/gentleink-filter-test.epub dist/
+          cp calibre-plugin/test-fixtures/gentleink-filter-test-story.epub dist/
           sha256sum dist/* > dist/SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:

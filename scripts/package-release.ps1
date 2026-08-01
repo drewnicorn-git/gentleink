@@ -93,6 +93,16 @@ Compress-Archive -Path "$KoreaderStaging\*" -DestinationPath $KoreaderZip -Force
 Write-Host "  PASS: Calibre plugin -> gentleink.zip (load this file in Calibre)" -ForegroundColor Green
 Write-Host "  PASS: KOReader plugin -> gentleink-koreader-$Version.zip" -ForegroundColor Green
 
+# Test EPUBs for plugin verification
+$TestFixtures = Join-Path $Root "calibre-plugin\test-fixtures"
+foreach ($Epub in @("gentleink-filter-test.epub", "gentleink-filter-test-story.epub")) {
+    $Src = Join-Path $TestFixtures $Epub
+    if (Test-Path $Src) {
+        Copy-Item $Src (Join-Path $Dist $Epub) -Force
+        Write-Host "  PASS: Test EPUB -> $Epub" -ForegroundColor Green
+    }
+}
+
 # Step 5: Checksums
 Write-Host "`n[5/5] Generating checksums..." -ForegroundColor Yellow
 $ChecksumFile = Join-Path $Dist "SHA256SUMS.txt"
