@@ -52,6 +52,23 @@ Older release zips (`gentleink-calibre-0.1.0.zip`) nested files inside a `gentle
 
 Then load `dist\gentleink.zip` in Calibre.
 
+### Calibre keeps saying "You must restart calibre before you can configure"
+
+This usually means the plugin failed to load fully (often v0.1.0–v0.1.1). Fix:
+
+1. **Remove the old plugin:** Preferences → Plugins → find **GentleInk Language Filter** → **Remove plugin**. Restart Calibre.
+2. **Install v0.1.2+:** Load **`gentleink.zip`** from the latest release (not an older nested zip).
+3. **Restart Calibre once** when prompted.
+4. Open **Preferences → Plugins → GentleInk Language Filter → Customize plugin** — settings should appear.
+
+If it still fails, run Calibre from a terminal to see the real error:
+
+```powershell
+calibre-debug -g
+```
+
+Look for import errors mentioning `gentleink` or `PyQt5`.
+
 ---
 
 ## KOReader plugin (Kobo, jailbroken Kindle)

@@ -1,0 +1,48 @@
+from calibre.gui2.actions import InterfaceAction
+
+try:
+    from qt.core import QMessageBox
+except ImportError:
+    from PyQt5.QtWidgets import QMessageBox
+
+
+class GentleInkInterfaceAction(InterfaceAction):
+    name = "GentleInk Language Filter"
+    action_spec = (
+        "GentleInk Clean",
+        None,
+        "Clean profanity from selected books",
+        None,
+    )
+    action_type = "current"
+
+    def genesis(self):
+        self.qaction.triggered.connect(self.run_clean)
+
+    def run_clean(self):
+        from .action import clean_selected_books
+
+        db = self.gui.current_db
+        ids = self.gui.library_view.get_selected_ids()
+        if not ids:
+            QMessageBox.warning(self.gui, "GentleInk", "Select one or more books first.")
+            return
+
+        reply = QMessageBox.question(
+            self.gui,
+            "GentleInk",
+            f"Clean profanity from {len(ids)} book(s)?\n\n"
+            "Original files are backed up as ORIGINAL_EPUB (or ORIGINAL_AZW3).",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+
+        results = clean_selected_books(db, ids, self.gui)
+        ok = sum(1 for r in results if r.get("ok"))
+        fail = len(results) - ok
+        QMessageBox.information(
+            self.gui,
+            "GentleInk complete",
+            f"Cleaned: {ok}\nFailed: {fail}",
+        )

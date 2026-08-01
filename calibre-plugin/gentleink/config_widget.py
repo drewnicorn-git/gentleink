@@ -1,7 +1,9 @@
-from PyQt5.QtWidgets import QComboBox, QFormLayout, QLabel, QVBoxLayout, QWidget
+try:
+    from qt.core import QComboBox, QFormLayout, QLabel, QVBoxLayout, QWidget
+except ImportError:
+    from PyQt5.QtWidgets import QComboBox, QFormLayout, QLabel, QVBoxLayout, QWidget
 
 from .config import plugin_prefs
-from .filter_engine import GentleInkFilter
 
 
 class ConfigWidget(QWidget):
@@ -23,8 +25,6 @@ class ConfigWidget(QWidget):
             "Select books in your library and click 'GentleInk Clean' on the toolbar.\n"
             "Originals are backed up as ORIGINAL_EPUB."
         ))
-
-        self.filter = GentleInkFilter()
 
     def save_settings(self):
         plugin_prefs["mode"] = self.mode.currentText()
