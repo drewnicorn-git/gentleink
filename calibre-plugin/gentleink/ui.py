@@ -41,8 +41,14 @@ class GentleInkInterfaceAction(InterfaceAction):
         results = clean_selected_books(db, ids, self.gui)
         ok = sum(1 for r in results if r.get("ok"))
         fail = len(results) - ok
+        lines = [f"Cleaned: {ok}", f"Failed: {fail}"]
+        for r in results:
+            if not r.get("ok"):
+                lines.append(f"{r.get('title', 'Book')}: {r.get('error', 'Unknown error')}")
+            elif r.get("changed", 0) == 0:
+                lines.append(f"{r.get('title', 'Book')}: no profanity found ({r.get('format', 'epub').upper()})")
         QMessageBox.information(
             self.gui,
             "GentleInk complete",
-            f"Cleaned: {ok}\nFailed: {fail}",
+            "\n".join(lines),
         )
