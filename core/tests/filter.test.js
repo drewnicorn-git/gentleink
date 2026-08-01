@@ -16,8 +16,10 @@ let failed = 0;
 for (const test of tests) {
   const mode = test.mode ?? 'substitute';
   const profile = test.profile ?? 'family';
-  const result = filter.filterText(test.input, { mode, profile });
   const matches = filter.analyze(test.input, { profile });
+  const result = (test.mode || test.expectedContains || test.expectedPattern || test.expectedNotContains)
+    ? filter.filterText(test.input, { mode, profile })
+    : { text: test.input };
 
   let ok = true;
   let reason = '';

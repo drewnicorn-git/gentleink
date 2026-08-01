@@ -65,6 +65,7 @@ def _filter_html_text_nodes(html: str, engine: GentleInkFilter, mode: str, profi
 
 
 def _filter_html(html: str, engine: GentleInkFilter, mode: str, profile: str) -> str:
+    html = html.replace("&nbsp;", " ").replace("&#160;", " ").replace("&#xA0;", " ")
     out = engine.apply_phrases(html, profile, mode, html_gap=HTML_GAP)
     for _ in range(MAX_PASSES):
         before = out

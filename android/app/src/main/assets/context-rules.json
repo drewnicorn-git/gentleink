@@ -7,7 +7,9 @@
         "\\b(?:donkey|mule|beast of burden|burro|jenny|jack)\\b.{0,30}\\bass\\b",
         "\\bass\\s+(?:and|or)\\s+(?:donkey|mule|colt|foal|horse|ox|camel)\\b",
         "\\bbeast of burden\\b",
-        "\\b(?:an|the)\\s+ass\\s+(?:brayed|carrying|who|which|that)\\b"
+        "\\b(?:an|the)\\s+ass\\s+(?:brayed|carrying|who|which|that)\\b",
+        "\\b(?:on|upon)\\s+an\\s+ass\\b",
+        "\\b(?:on|upon)\\s+the\\s+ass\\b"
       ],
       "profanePatterns": [
         "\\b(?:kick|kicked|kicking)\\s+(?:your|his|her|their|my|our)\\s+ass\\b",
@@ -25,49 +27,6 @@
         "\\b(?:my|your|his|her|their|our)\\s+ass\\b"
       ],
       "defaultAction": "skip"
-    },
-    "hell": {
-      "safePatterns": [
-        "\\bhell-bent\\b",
-        "\\b(?:the|into|from|through|gates of|depths of|fires of)\\s+hell\\b",
-        "\\bhell\\s+(?:is|was|shall|will|hath|hast)\\b",
-        "\\b(?:raise|raised|raising)\\s+hell\\b",
-        "\\b(?:all|pure|living|absolute|complete)\\s+hell\\b",
-        "\\ba hell of a\\b",
-        "\\bhell of a\\b"
-      ],
-      "profanePatterns": [
-        "\\bwhat the hell\\b",
-        "\\bhow the hell\\b",
-        "\\bwhere the hell\\b",
-        "\\bwho the hell\\b",
-        "\\bwhy the hell\\b",
-        "\\bthe hell\\s+(?:with|out of|you|he|she|they|it|we)\\b",
-        "\\bgo to hell\\b",
-        "\\b(?:like|as)\\s+hell\\b",
-        "\\bhell yeah\\b",
-        "\\bhell no\\b",
-        "\\bto hell with\\b",
-        "\\boh hell\\b",
-        "\\baw hell\\b",
-        "\\bhell\\b\\s*[!?.,;:]"
-      ],
-      "defaultAction": "context"
-    },
-    "damn": {
-      "safePatterns": [
-        "\\bdamn the torpedoes\\b",
-        "\\bdamn\\s+(?:you|him|her|them|it|us|me)\\s+to\\b",
-        "\\b(?:not|never|hardly)\\s+worth a damn\\b"
-      ],
-      "profanePatterns": [
-        "\\bdamn\\s+(?:you|him|her|them|it|us|me|right|well|it all)\\b",
-        "\\bgoddamn\\b",
-        "\\bgod damn\\b",
-        "\\bdamned\\s+(?:if|right|well|sure)\\b",
-        "\\bwhat the damn\\b"
-      ],
-      "defaultAction": "context"
     },
     "bitch": {
       "safePatterns": [
@@ -159,20 +118,22 @@
         "\\bsucks\\s+(?:to be|ass|balls|dick|cock)\\b"
       ],
       "defaultAction": "context"
-    },
-    "crap": {
-      "safePatterns": [
-        "\\bcrap\\s+game\\b",
-        "\\bshoot(?:ing)?\\s+craps\\b"
-      ],
-      "profanePatterns": [
-        "\\b(?:full|load|piece|pile|load|bucket|bunch|load)\\s+of\\s+crap\\b",
-        "\\b(?:what|this|that|total|complete|absolute)\\s+crap\\b",
-        "\\b(?:talk|talking|talked)\\s+crap\\b",
-        "\\b(?:cut|cutting)\\s+the\\s+crap\\b"
-      ],
-      "defaultAction": "context"
     }
+  },
+  "tier1Safe": {
+    "hell": [
+      "\\bhell-bent\\b",
+      "\\bgates of hell\\b",
+      "\\bdepths of hell\\b",
+      "\\bfires of hell\\b",
+      "\\b(?:into|from|through)\\s+hell\\b",
+      "\\bhell\\s+(?:is|was|shall|will|hath|hast)\\b",
+      "\\ba hell of a\\b",
+      "\\bhell of a\\b"
+    ],
+    "damn": [
+      "\\bdamn the torpedoes\\b"
+    ]
   },
   "phrases": [
     {"words": ["what", "the", "hell"], "family": "what the heck", "religious_strict": "what in the world"},
@@ -192,10 +153,26 @@
     {"words": ["what", "the", "fuck"], "family": "what the fudge", "religious_strict": "what in the world"},
     {"words": ["son", "of", "a", "bitch"], "family": "son of a meany", "religious_strict": "son of a wrongdoer"},
     {"words": ["god", "damn"], "family": "gosh darn", "religious_strict": "goodness"},
+    {"words": ["god", "damn", "it"], "family": "gosh darn it", "religious_strict": "goodness gracious"},
     {"words": ["holy", "shit"], "family": "holy crud", "religious_strict": "goodness gracious"},
     {"words": ["what", "the", "damn"], "family": "what the darn", "religious_strict": "what in the world"},
     {"words": ["like", "hell"], "family": "like heck", "religious_strict": "very much"},
     {"words": ["hell", "yeah"], "family": "heck yeah", "religious_strict": "yes indeed"},
-    {"words": ["hell", "no"], "family": "heck no", "religious_strict": "certainly not"}
+    {"words": ["hell", "no"], "family": "heck no", "religious_strict": "certainly not"},
+    {"words": ["damn", "it"], "family": "darn it", "religious_strict": "alas"},
+    {"words": ["damn", "you"], "family": "darn you", "religious_strict": "shame on you"},
+    {"words": ["you", "bastard"], "family": "you scoundrel", "religious_strict": "you wrongdoer"},
+    {"words": ["you", "damn"], "family": "you darn", "religious_strict": "you wicked one"},
+    {"words": ["bloody", "hell"], "family": "bloody heck", "religious_strict": "goodness gracious"},
+    {"words": ["piece", "of", "shit"], "family": "piece of crud", "religious_strict": "worthless thing"},
+    {"words": ["dumb", "ass"], "family": "dummy", "religious_strict": "fool"},
+    {"words": ["smart", "ass"], "family": "wise guy", "religious_strict": "mocking one"},
+    {"words": ["fat", "ass"], "family": "big butt", "religious_strict": "glutton"},
+    {"words": ["bad", "ass"], "family": "tough guy", "religious_strict": "rowdy one"},
+    {"words": ["shut", "the", "hell", "up"], "family": "shut the heck up", "religious_strict": "be quiet"},
+    {"words": ["what", "the", "hell", "is"], "family": "what the heck is", "religious_strict": "what in the world is"},
+    {"words": ["give", "a", "damn"], "family": "give a darn", "religious_strict": "care at all"},
+    {"words": ["don't", "give", "a", "damn"], "family": "don't give a darn", "religious_strict": "don't care at all"},
+    {"words": ["do", "not", "give", "a", "damn"], "family": "do not give a darn", "religious_strict": "do not care at all"}
   ]
 }

@@ -51,6 +51,9 @@ data class FilterConfig(
     val compounds: Set<String>,
     val contractions: Set<String>,
     val tier1Words: Set<String>,
+    val wordList: List<String>,
+    val leetMap: Map<String, String>,
+    val tier1Safe: Map<String, List<String>>,
     val ambiguous: Map<String, AmbiguousRules>,
     val phrases: List<PhraseRule>,
     val substitutions: Map<String, Map<String, String>>

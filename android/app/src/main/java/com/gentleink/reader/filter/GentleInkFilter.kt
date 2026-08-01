@@ -2,51 +2,51 @@ package com.gentleink.reader.filter
 
 import android.content.Context
 import org.json.JSONObject
+import java.text.Normalizer
 import java.util.Locale
 
 class GentleInkFilter private constructor(private val config: FilterConfig) {
 
-    fun analyze(text: String, profile: FilterProfile = FilterProfile.FAMILY, windowSize: Int = 80): List<FilterMatch> {
+    fun analyze(text: String, profile: FilterProfile = FilterProfile.FAMILY, windowSize: Int = 120): List<FilterMatch> {
+        val prepared = prepareText(text)
         val matches = mutableListOf<FilterMatch>()
-        val allWords = (config.tier1Words + config.ambiguous.keys).distinct()
 
-        for (word in allWords) {
+        for (word in config.wordList) {
             val pattern = Regex("\\b${Regex.escape(word)}\\b", RegexOption.IGNORE_CASE)
-            pattern.findAll(text).forEach { match ->
+            pattern.findAll(prepared).forEach { match ->
                 val start = match.range.first
                 val end = match.range.last + 1
-                val token = match.value
-                val lemma = token.lowercase(Locale.US)
+                if (!isWordBoundary(prepared, start, end)) return@forEach
+                if (isInsideCompound(prepared, start, end)) return@forEach
+                if (isContractionSpan(prepared, start, end)) return@forEach
 
-                if (isInsideCompound(text, start, end)) return@forEach
-                if (isContractionSpan(text, start, end)) return@forEach
+                val token = text.substring(start.coerceAtMost(text.length), end.coerceAtMost(text.length))
+                val lemma = match.value.lowercase(Locale.US)
+                val contextStart = (start - windowSize).coerceAtLeast(0)
+                val contextEnd = (end + windowSize).coerceAtMost(prepared.length)
+                val contextText = prepared.substring(contextStart, contextEnd)
 
                 if (lemma in config.tier1Words) {
+                    if (isTier1Safe(lemma, contextText)) return@forEach
                     matches += FilterMatch(token, lemma, start, end, 1, "unambiguous profanity list")
                     return@forEach
                 }
 
                 val rules = config.ambiguous[lemma] ?: return@forEach
-                val contextStart = (start - windowSize).coerceAtLeast(0)
-                val contextEnd = (end + windowSize).coerceAtMost(text.length)
-                val contextText = text.substring(contextStart, contextEnd)
                 val (safe, profane) = scoreContext(contextText, rules)
-
-                val shouldFilter = when {
-                    profane > safe -> true
-                    profane == safe && profane > 0 -> rules.defaultAction != "skip"
-                    profane == 0 && safe == 0 && rules.defaultAction == "context" -> true
-                    else -> false
-                }
-
-                if (shouldFilter) {
-                    val reason = if (profane > safe) "profane context ($profane > $safe)" else "ambiguous context tie-breaker"
+                if (shouldFilterContext(rules, safe, profane, profile)) {
+                    val reason = when {
+                        profane > safe -> "profane context ($profane > $safe)"
+                        profane == safe && profane > 0 -> "ambiguous context tie-breaker"
+                        profile == FilterProfile.RELIGIOUS_STRICT -> "strict profile default"
+                        else -> "expletive default (no safe context)"
+                    }
                     matches += FilterMatch(token, lemma, start, end, 2, reason)
                 }
             }
         }
 
-        return matches.sortedBy { it.start }
+        return dedupeOverlapping(matches)
     }
 
     fun filterText(
@@ -57,9 +57,8 @@ class GentleInkFilter private constructor(private val config: FilterConfig) {
     ): FilterResult {
         var out = text
         val allMatches = mutableListOf<FilterMatch>()
-        for (pass in 0 until 8) {
+        for (pass in 0 until MAX_PASSES) {
             val before = out
-            out = applyPhrases(out, mode, profile, maskChar)
             val once = filterTextOnce(out, mode, profile, maskChar)
             out = once.text
             allMatches += once.matches
@@ -74,16 +73,20 @@ class GentleInkFilter private constructor(private val config: FilterConfig) {
         profile: FilterProfile,
         maskChar: Char
     ): FilterResult {
-        val matches = analyze(text, profile)
-        if (matches.isEmpty()) return FilterResult(text, emptyList(), false)
+        val prepared = applyPhrases(text, mode, profile, maskChar)
+        val matches = analyze(prepared, profile)
+        if (matches.isEmpty()) {
+            return FilterResult(prepared, emptyList(), prepared != text)
+        }
 
         val subs = config.substitutions[profile.key].orEmpty()
-        val builder = StringBuilder()
-        var cursor = 0
+        var out = prepared
+        var offset = 0
 
         for (match in matches) {
-            builder.append(text.substring(cursor, match.start))
-            val original = text.substring(match.start, match.end)
+            val start = match.start + offset
+            val end = match.end + offset
+            val original = out.substring(start, end)
             val replacement = when (mode) {
                 FilterMode.REMOVE -> ""
                 FilterMode.MASK -> maskChar.toString().repeat(maxOf(3, original.length))
@@ -92,12 +95,11 @@ class GentleInkFilter private constructor(private val config: FilterConfig) {
                     preserveCase(original, sub)
                 }
             }
-            builder.append(replacement)
-            cursor = match.end
+            out = out.substring(0, start) + replacement + out.substring(end)
+            offset += replacement.length - original.length
         }
-        builder.append(text.substring(cursor))
 
-        return FilterResult(builder.toString(), matches, true)
+        return FilterResult(out, matches, true)
     }
 
     private fun applyPhrases(
@@ -107,7 +109,7 @@ class GentleInkFilter private constructor(private val config: FilterConfig) {
         maskChar: Char
     ): String {
         if (mode == FilterMode.REMOVE || config.phrases.isEmpty()) return text
-        var out = text
+        var out = prepareText(text)
         for (phrase in config.phrases) {
             val replacement = phrase.replacement(profile)
             val pattern = Regex(buildPhrasePattern(phrase.words), RegexOption.IGNORE_CASE)
@@ -123,8 +125,46 @@ class GentleInkFilter private constructor(private val config: FilterConfig) {
         return out
     }
 
+    private fun prepareText(text: String): String {
+        var out = Normalizer.normalize(text, Normalizer.Form.NFKC)
+            .replace('\u2018', '\'')
+            .replace('\u2019', '\'')
+            .replace('\u2032', '\'')
+            .replace('\u201C', '"')
+            .replace('\u201D', '"')
+            .replace(Regex("&nbsp;|&#160;|&#xA0;", RegexOption.IGNORE_CASE), " ")
+        for ((from, to) in config.leetMap) {
+            out = out.replace(from, to)
+        }
+        return out
+    }
+
+    private fun isTier1Safe(lemma: String, contextText: String): Boolean {
+        val patterns = config.tier1Safe[lemma].orEmpty()
+        val lower = contextText.lowercase(Locale.US)
+        return patterns.any { Regex(it, RegexOption.IGNORE_CASE).containsMatchIn(lower) }
+    }
+
+    private fun shouldFilterContext(rules: AmbiguousRules, safe: Int, profane: Int, profile: FilterProfile): Boolean {
+        if (profile == FilterProfile.RELIGIOUS_STRICT) {
+            if (safe > profane) return false
+            if (rules.defaultAction == "skip" && safe == 0 && profane == 0) return false
+            return true
+        }
+        if (profane > safe) return true
+        if (profane == safe && profane > 0) return rules.defaultAction != "skip"
+        if (profane == 0 && safe == 0 && rules.defaultAction == "context") return true
+        return false
+    }
+
     private fun buildPhrasePattern(words: List<String>): String =
         words.joinToString("\\s+") { Regex.escape(it) }
+
+    private fun isWordBoundary(text: String, start: Int, end: Int): Boolean {
+        val before = if (start > 0) text[start - 1] else ' '
+        val after = if (end < text.length) text[end] else ' '
+        return !before.isLetterOrDigit() && before != '\'' && !after.isLetterOrDigit() && after != '\''
+    }
 
     private fun isInsideCompound(text: String, start: Int, end: Int): Boolean {
         val lower = text.lowercase(Locale.US)
@@ -161,6 +201,22 @@ class GentleInkFilter private constructor(private val config: FilterConfig) {
         return safe to profane
     }
 
+    private fun dedupeOverlapping(matches: List<FilterMatch>): List<FilterMatch> {
+        val sorted = matches.sortedWith(compareBy<FilterMatch> { it.start }.thenByDescending { it.end - it.start })
+        val kept = mutableListOf<FilterMatch>()
+        for (match in sorted) {
+            val last = kept.lastOrNull()
+            if (last != null && match.start < last.end) {
+                if (match.end - match.start > last.end - last.start) {
+                    kept[kept.lastIndex] = match
+                }
+                continue
+            }
+            kept += match
+        }
+        return kept
+    }
+
     private fun preserveCase(original: String, replacement: String): String {
         if (original.isEmpty()) return replacement
         if (replacement.isEmpty()) return original
@@ -172,6 +228,8 @@ class GentleInkFilter private constructor(private val config: FilterConfig) {
     }
 
     companion object {
+        private const val MAX_PASSES = 16
+
         fun fromContext(context: Context): GentleInkFilter {
             val assets = context.assets
             val allowlist = JSONObject(assets.open("allowlist.json").bufferedReader().readText())
@@ -183,6 +241,10 @@ class GentleInkFilter private constructor(private val config: FilterConfig) {
             val contractions = jsonArrayToSet(allowlist.getJSONArray("contractions"))
             val tier1Words = jsonArrayToSet(tier1.getJSONArray("words"))
 
+            val leetMap = tier1.optJSONObject("leetMap")?.let { obj ->
+                obj.keys().asSequence().associateWith { key -> obj.getString(key) }
+            }.orEmpty()
+
             val ambiguousJson = contextRules.getJSONObject("ambiguous")
             val ambiguous = ambiguousJson.keys().asSequence().associateWith { key ->
                 val obj = ambiguousJson.getJSONObject(key)
@@ -192,6 +254,13 @@ class GentleInkFilter private constructor(private val config: FilterConfig) {
                     defaultAction = obj.optString("defaultAction", "skip")
                 )
             }
+
+            val tier1SafeJson = contextRules.optJSONObject("tier1Safe")
+            val tier1Safe = tier1SafeJson?.keys()?.asSequence()?.associateWith { key ->
+                jsonArrayToList(tier1SafeJson.getJSONArray(key))
+            }.orEmpty()
+
+            val wordList = sortedWordList(tier1Words, ambiguous)
 
             val profilesJson = substitutions.getJSONObject("profiles")
             val subs = profilesJson.keys().asSequence().associateWith { key ->
@@ -217,11 +286,22 @@ class GentleInkFilter private constructor(private val config: FilterConfig) {
                     compounds = compounds,
                     contractions = contractions,
                     tier1Words = tier1Words,
+                    wordList = wordList,
+                    leetMap = leetMap,
+                    tier1Safe = tier1Safe,
                     ambiguous = ambiguous,
                     phrases = phrases,
                     substitutions = subs
                 )
             )
+        }
+
+        private fun sortedWordList(tier1Words: Set<String>, ambiguous: Map<String, AmbiguousRules>): List<String> {
+            val tier1Sorted = tier1Words.sortedByDescending { it.length }
+            val ambiguousSorted = ambiguous.keys
+                .filter { it !in tier1Sorted }
+                .sortedByDescending { it.length }
+            return tier1Sorted + ambiguousSorted
         }
 
         private fun jsonArrayToSet(array: org.json.JSONArray): Set<String> =

@@ -3,10 +3,26 @@ import path from 'node:path';
 
 const MODES = ['remove', 'mask', 'substitute'];
 const PROFILES = ['family', 'religious_strict'];
-const MAX_PASSES = 8;
+const MAX_PASSES = 16;
 
 function loadJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+}
+
+function normalizeInput(text) {
+  return text
+    .normalize('NFKC')
+    .replace(/[\u2018\u2019\u2032]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/&nbsp;|&#160;|&#xA0;/gi, ' ');
+}
+
+function applyLeetNormalization(text, leetMap) {
+  let out = text;
+  for (const [from, to] of Object.entries(leetMap)) {
+    out = out.split(from).join(to);
+  }
+  return out;
 }
 
 function isWordBoundary(text, start, end) {
@@ -57,7 +73,12 @@ function scoreContext(text, rules) {
   return { safe, profane };
 }
 
-function shouldFilterContext(rules, safe, profane) {
+function shouldFilterContext(rules, safe, profane, profile) {
+  if (profile === 'religious_strict') {
+    if (safe > profane) return false;
+    if (rules.defaultAction === 'skip' && safe === 0 && profane === 0) return false;
+    return true;
+  }
   if (profane > safe) return true;
   if (profane === safe && profane > 0) return rules.defaultAction !== 'skip';
   if (profane === 0 && safe === 0 && rules.defaultAction === 'context') return true;
@@ -71,6 +92,32 @@ function buildPhraseRegex(words, htmlGap = null) {
     .join(gap);
 }
 
+function dedupeOverlapping(matches) {
+  const sorted = [...matches].sort(
+    (a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start),
+  );
+  const kept = [];
+  for (const match of sorted) {
+    const last = kept[kept.length - 1];
+    if (last && match.start < last.end) {
+      if (match.end - match.start > last.end - last.start) {
+        kept[kept.length - 1] = match;
+      }
+      continue;
+    }
+    kept.push(match);
+  }
+  return kept;
+}
+
+function sortedWordList(tier1Words, ambiguous) {
+  const tier1Sorted = [...tier1Words].sort((a, b) => b.length - a.length);
+  const ambiguousSorted = Object.keys(ambiguous)
+    .filter((word) => !tier1Sorted.includes(word))
+    .sort((a, b) => b.length - a.length);
+  return [...tier1Sorted, ...ambiguousSorted];
+}
+
 export class GentleInkFilter {
   constructor({ allowlist, tier1, contextRules, substitutions }) {
     this.compounds = allowlist.compounds.map((w) => w.toLowerCase());
@@ -79,7 +126,9 @@ export class GentleInkFilter {
     this.leetMap = tier1.leetMap ?? {};
     this.ambiguous = contextRules.ambiguous ?? {};
     this.phrases = contextRules.phrases ?? [];
+    this.tier1Safe = contextRules.tier1Safe ?? {};
     this.substitutions = substitutions.profiles ?? {};
+    this.wordList = sortedWordList(this.tier1Words, this.ambiguous);
   }
 
   static fromDataDir(dataDir) {
@@ -91,30 +140,38 @@ export class GentleInkFilter {
     });
   }
 
-  analyze(text, { profile = 'family', windowSize = 80 } = {}) {
-    const matches = [];
-    const allWords = new Set([
-      ...this.tier1Words,
-      ...Object.keys(this.ambiguous),
-    ]);
+  prepareText(text) {
+    return applyLeetNormalization(normalizeInput(text), this.leetMap);
+  }
 
-    for (const word of allWords) {
+  isTier1Safe(lemma, contextText) {
+    const patterns = this.tier1Safe[lemma] ?? [];
+    const lower = contextText.toLowerCase();
+    return patterns.some((pattern) => new RegExp(pattern, 'i').test(lower));
+  }
+
+  analyze(text, { profile = 'family', windowSize = 120 } = {}) {
+    const prepared = this.prepareText(text);
+    const matches = [];
+
+    for (const word of this.wordList) {
       const pattern = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
       let match;
-      while ((match = pattern.exec(text)) !== null) {
+      while ((match = pattern.exec(prepared)) !== null) {
         const start = match.index;
         const end = start + match[0].length;
-        if (!isWordBoundary(text, start, end)) continue;
-        if (isInsideCompound(text, start, end, this.compounds)) continue;
-        if (isContractionSpan(text, start, end, this.contractions)) continue;
+        if (!isWordBoundary(prepared, start, end)) continue;
+        if (isInsideCompound(prepared, start, end, this.compounds)) continue;
+        if (isContractionSpan(prepared, start, end, this.contractions)) continue;
 
-        const token = match[0];
-        const lemma = token.toLowerCase();
+        const token = text.slice(start, end);
+        const lemma = match[0].toLowerCase();
         const contextStart = Math.max(0, start - windowSize);
         const contextEnd = Math.min(text.length, end + windowSize);
-        const contextText = text.slice(contextStart, contextEnd);
+        const contextText = prepared.slice(contextStart, contextEnd);
 
         if (this.tier1Words.includes(lemma)) {
+          if (this.isTier1Safe(lemma, contextText)) continue;
           matches.push({
             word: token,
             lemma,
@@ -130,23 +187,25 @@ export class GentleInkFilter {
         if (!rules) continue;
 
         const { safe, profane } = scoreContext(contextText, rules);
-        if (shouldFilterContext(rules, safe, profane)) {
+        if (shouldFilterContext(rules, safe, profane, profile)) {
           const reason = profane > safe
             ? `profane context (${profane} > ${safe})`
             : profane === safe && profane > 0
               ? 'ambiguous context tie-breaker'
-              : 'expletive default (no safe context)';
+              : profile === 'religious_strict'
+                ? 'strict profile default'
+                : 'expletive default (no safe context)';
           matches.push({ word: token, lemma, start, end, tier: 2, reason });
         }
       }
     }
 
-    return matches.sort((a, b) => a.start - b.start);
+    return dedupeOverlapping(matches);
   }
 
   applyPhrases(text, { profile = 'family', htmlGap = null, mode = 'substitute', maskChar = '*' } = {}) {
     if (mode === 'remove' || !this.phrases.length) return text;
-    let out = text;
+    let out = this.prepareText(text);
     for (const phrase of this.phrases) {
       const replacement = phrase[profile] ?? phrase.family;
       if (!replacement) continue;
@@ -160,13 +219,14 @@ export class GentleInkFilter {
   }
 
   filterTextOnce(text, { mode = 'substitute', profile = 'family', maskChar = '*' } = {}) {
-    const matches = this.analyze(text, { profile });
+    const prepared = this.applyPhrases(text, { profile, mode, maskChar });
+    const matches = this.analyze(prepared, { profile });
     if (matches.length === 0) {
-      return { text, matches: [], changed: false };
+      return { text: prepared, matches: [], changed: prepared !== text };
     }
 
     const subs = this.substitutions[profile] ?? {};
-    let out = text;
+    let out = prepared;
     let offset = 0;
 
     for (const match of matches) {
@@ -201,7 +261,6 @@ export class GentleInkFilter {
 
     for (let pass = 0; pass < maxPasses; pass += 1) {
       const before = out;
-      out = this.applyPhrases(out, { profile, mode, maskChar });
       const result = this.filterTextOnce(out, { mode, profile, maskChar });
       out = result.text;
       allMatches.push(...result.matches);
@@ -212,4 +271,4 @@ export class GentleInkFilter {
   }
 }
 
-export { MODES, PROFILES, buildPhraseRegex, MAX_PASSES };
+export { MODES, PROFILES, buildPhraseRegex, MAX_PASSES, normalizeInput };

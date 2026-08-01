@@ -9,7 +9,7 @@ class GentleInkPlugin(InterfaceActionBase):
     description = "Filter profanity from selected ebooks using GentleInk context-aware rules"
     supported_platforms = ["windows", "osx", "linux"]
     author = "GentleInk"
-    version = (0, 1, 9)
+    version = (0, 2, 0)
     minimum_calibre_version = (6, 0, 0)
     actual_plugin = "calibre_plugins.gentleink.ui:GentleInkInterfaceAction"
 
