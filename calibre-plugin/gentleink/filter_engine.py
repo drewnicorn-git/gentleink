@@ -94,7 +94,7 @@ class GentleInkFilter:
         all_words = list(dict.fromkeys(list(self.tier1_words) + list(self.ambiguous.keys())))
 
         for word in all_words:
-            for match in re.finditer(rf"\b{re.escape(word)}\b", text, flags=re.IGNORE_CASE):
+            for match in re.finditer(rf"\b{re.escape(word)}\b", text, flags=re.IGNORECASE):
                 start, end = match.span()
                 token = match.group(0)
                 lemma = token.lower()
