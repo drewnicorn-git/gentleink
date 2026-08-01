@@ -44,5 +44,11 @@
   {"id": "sub-family-bitch", "input": "You selfish bitch.", "shouldFilter": true, "mode": "substitute", "profile": "family", "expectedContains": "meany"},
   {"id": "sub-family-screw", "input": "We really screwed that up.", "shouldFilter": true, "mode": "substitute", "profile": "family", "expectedContains": "messed up"},
   {"id": "sub-mask", "input": "What the hell!", "shouldFilter": true, "mode": "mask", "profile": "family", "expectedPattern": "\\*{3,}"},
-  {"id": "sub-remove", "input": "What the hell!", "shouldFilter": true, "mode": "remove", "profile": "family", "expectedNotContains": "hell"}
+  {"id": "sub-remove", "input": "What the hell!", "shouldFilter": true, "mode": "remove", "profile": "family", "expectedNotContains": "hell"},
+  {"id": "prof-hell-alone", "input": "Hell!", "shouldFilter": true, "lemma": "hell"},
+  {"id": "sub-family-hell-alone", "input": "Hell!", "shouldFilter": true, "mode": "substitute", "profile": "family", "expectedContains": "Heck"},
+  {"id": "prof-my-ass", "input": "Get off my ass.", "shouldFilter": true, "lemma": "ass"},
+  {"id": "sub-family-my-ass", "input": "Get off my ass.", "shouldFilter": true, "mode": "substitute", "profile": "family", "expectedContains": "butt"},
+  {"id": "sub-phrase-holy-shit", "input": "Holy shit, that hurt.", "shouldFilter": true, "mode": "substitute", "profile": "family", "expectedContains": "crud"},
+  {"id": "sub-hell-of-a", "input": "We had a hell of a good time.", "shouldFilter": false}
 ]

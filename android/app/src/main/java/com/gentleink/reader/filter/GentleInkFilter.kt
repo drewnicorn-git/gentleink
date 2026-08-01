@@ -35,6 +35,7 @@ class GentleInkFilter private constructor(private val config: FilterConfig) {
                 val shouldFilter = when {
                     profane > safe -> true
                     profane == safe && profane > 0 -> rules.defaultAction != "skip"
+                    profane == 0 && safe == 0 && rules.defaultAction == "context" -> true
                     else -> false
                 }
 
@@ -54,13 +55,31 @@ class GentleInkFilter private constructor(private val config: FilterConfig) {
         profile: FilterProfile = FilterProfile.FAMILY,
         maskChar: Char = '*'
     ): FilterResult {
+        var out = text
+        val allMatches = mutableListOf<FilterMatch>()
+        for (pass in 0 until 8) {
+            val before = out
+            out = applyPhrases(out, mode, profile, maskChar)
+            val once = filterTextOnce(out, mode, profile, maskChar)
+            out = once.text
+            allMatches += once.matches
+            if (out == before && !once.changed) break
+        }
+        return FilterResult(out, allMatches, out != text)
+    }
+
+    private fun filterTextOnce(
+        text: String,
+        mode: FilterMode,
+        profile: FilterProfile,
+        maskChar: Char
+    ): FilterResult {
         val matches = analyze(text, profile)
         if (matches.isEmpty()) return FilterResult(text, emptyList(), false)
 
         val subs = config.substitutions[profile.key].orEmpty()
         val builder = StringBuilder()
         var cursor = 0
-        var changed = false
 
         for (match in matches) {
             builder.append(text.substring(cursor, match.start))
@@ -75,12 +94,37 @@ class GentleInkFilter private constructor(private val config: FilterConfig) {
             }
             builder.append(replacement)
             cursor = match.end
-            changed = true
         }
         builder.append(text.substring(cursor))
 
-        return FilterResult(builder.toString(), matches, changed)
+        return FilterResult(builder.toString(), matches, true)
     }
+
+    private fun applyPhrases(
+        text: String,
+        mode: FilterMode,
+        profile: FilterProfile,
+        maskChar: Char
+    ): String {
+        if (mode == FilterMode.REMOVE || config.phrases.isEmpty()) return text
+        var out = text
+        for (phrase in config.phrases) {
+            val replacement = phrase.replacement(profile)
+            val pattern = Regex(buildPhrasePattern(phrase.words), RegexOption.IGNORE_CASE)
+            out = pattern.replace(out) { match ->
+                val original = match.value
+                if (mode == FilterMode.MASK) {
+                    maskChar.toString().repeat(maxOf(3, original.length))
+                } else {
+                    preserveCase(original, replacement)
+                }
+            }
+        }
+        return out
+    }
+
+    private fun buildPhrasePattern(words: List<String>): String =
+        words.joinToString("\\s+") { Regex.escape(it) }
 
     private fun isInsideCompound(text: String, start: Int, end: Int): Boolean {
         val lower = text.lowercase(Locale.US)
@@ -118,6 +162,8 @@ class GentleInkFilter private constructor(private val config: FilterConfig) {
     }
 
     private fun preserveCase(original: String, replacement: String): String {
+        if (original.isEmpty()) return replacement
+        if (replacement.isEmpty()) return original
         if (original == original.uppercase(Locale.US)) return replacement.uppercase(Locale.US)
         if (original.first().isUpperCase()) {
             return replacement.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
@@ -153,12 +199,26 @@ class GentleInkFilter private constructor(private val config: FilterConfig) {
                 obj.keys().asSequence().associateWith { word -> obj.getString(word) }
             }
 
+            val phrases = contextRules.optJSONArray("phrases")?.let { array ->
+                (0 until array.length()).map { index ->
+                    val obj = array.getJSONObject(index)
+                    val wordsJson = obj.getJSONArray("words")
+                    val words = (0 until wordsJson.length()).map { wordsJson.getString(it) }
+                    PhraseRule(
+                        words = words,
+                        family = obj.getString("family"),
+                        religiousStrict = obj.getString("religious_strict"),
+                    )
+                }
+            }.orEmpty()
+
             return GentleInkFilter(
                 FilterConfig(
                     compounds = compounds,
                     contractions = contractions,
                     tier1Words = tier1Words,
                     ambiguous = ambiguous,
+                    phrases = phrases,
                     substitutions = subs
                 )
             )

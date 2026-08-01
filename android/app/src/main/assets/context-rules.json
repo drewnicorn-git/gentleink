@@ -17,7 +17,12 @@
         "\\b(?:get|got|gets|getting)\\s+(?:your|his|her|their|my|our)\\s+ass\\b",
         "\\b(?:move|moving|shake|shaking)\\s+(?:your|his|her|their|my|our)\\s+ass\\b",
         "\\b(?:save|saved|saving)\\s+(?:your|his|her|their|my|our)\\s+ass\\b",
-        "\\b(?:whoop|whooped|whooping)\\s+(?:your|his|her|their|my|our)\\s+ass\\b"
+        "\\b(?:whoop|whooped|whooping)\\s+(?:your|his|her|their|my|our)\\s+ass\\b",
+        "\\b(?:get|got|gets|getting)\\s+off\\s+(?:your|his|her|their|my|our)\\s+ass\\b",
+        "\\b(?:on|off)\\s+(?:your|his|her|their|my|our)\\s+ass\\b",
+        "\\b(?:cover|covers|covering|covered|watch|watches|watching|watched|protect|protects|protecting|protected)\\s+(?:your|his|her|their|my|our)\\s+ass\\b",
+        "\\b(?:an|such a|total)\\s+ass\\b",
+        "\\b(?:my|your|his|her|their|our)\\s+ass\\b"
       ],
       "defaultAction": "skip"
     },
@@ -27,7 +32,9 @@
         "\\b(?:the|into|from|through|gates of|depths of|fires of)\\s+hell\\b",
         "\\bhell\\s+(?:is|was|shall|will|hath|hast)\\b",
         "\\b(?:raise|raised|raising)\\s+hell\\b",
-        "\\b(?:all|pure|living|absolute|complete)\\s+hell\\b"
+        "\\b(?:all|pure|living|absolute|complete)\\s+hell\\b",
+        "\\ba hell of a\\b",
+        "\\bhell of a\\b"
       ],
       "profanePatterns": [
         "\\bwhat the hell\\b",
@@ -40,7 +47,10 @@
         "\\b(?:like|as)\\s+hell\\b",
         "\\bhell yeah\\b",
         "\\bhell no\\b",
-        "\\bto hell with\\b"
+        "\\bto hell with\\b",
+        "\\boh hell\\b",
+        "\\baw hell\\b",
+        "\\bhell\\b\\s*[!?.,;:]"
       ],
       "defaultAction": "context"
     },
@@ -163,5 +173,29 @@
       ],
       "defaultAction": "context"
     }
-  }
+  },
+  "phrases": [
+    {"words": ["what", "the", "hell"], "family": "what the heck", "religious_strict": "what in the world"},
+    {"words": ["how", "the", "hell"], "family": "how the heck", "religious_strict": "how in the world"},
+    {"words": ["where", "the", "hell"], "family": "where the heck", "religious_strict": "where in the world"},
+    {"words": ["who", "the", "hell"], "family": "who the heck", "religious_strict": "who in the world"},
+    {"words": ["why", "the", "hell"], "family": "why the heck", "religious_strict": "why in the world"},
+    {"words": ["go", "to", "hell"], "family": "go to heck", "religious_strict": "go away"},
+    {"words": ["to", "hell", "with"], "family": "to heck with", "religious_strict": "forget about"},
+    {"words": ["pain", "in", "the", "ass"], "family": "pain in the butt", "religious_strict": "real nuisance"},
+    {"words": ["kick", "your", "ass"], "family": "kick your butt", "religious_strict": "get you"},
+    {"words": ["kick", "his", "ass"], "family": "kick his butt", "religious_strict": "get him"},
+    {"words": ["kick", "her", "ass"], "family": "kick her butt", "religious_strict": "get her"},
+    {"words": ["move", "your", "ass"], "family": "move your butt", "religious_strict": "move along"},
+    {"words": ["your", "ass"], "family": "your butt", "religious_strict": "your rear"},
+    {"words": ["my", "ass"], "family": "my butt", "religious_strict": "my rear"},
+    {"words": ["what", "the", "fuck"], "family": "what the fudge", "religious_strict": "what in the world"},
+    {"words": ["son", "of", "a", "bitch"], "family": "son of a meany", "religious_strict": "son of a wrongdoer"},
+    {"words": ["god", "damn"], "family": "gosh darn", "religious_strict": "goodness"},
+    {"words": ["holy", "shit"], "family": "holy crud", "religious_strict": "goodness gracious"},
+    {"words": ["what", "the", "damn"], "family": "what the darn", "religious_strict": "what in the world"},
+    {"words": ["like", "hell"], "family": "like heck", "religious_strict": "very much"},
+    {"words": ["hell", "yeah"], "family": "heck yeah", "religious_strict": "yes indeed"},
+    {"words": ["hell", "no"], "family": "heck no", "religious_strict": "certainly not"}
+  ]
 }

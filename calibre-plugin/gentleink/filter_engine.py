@@ -15,6 +15,8 @@ Profile = Literal["family", "religious_strict"]
 
 PLUGIN_PKG = "calibre_plugins.gentleink"
 DATA_DIR = Path(__file__).resolve().parent / "core_data"
+MAX_PASSES = 8
+HTML_GAP = r"(?:<[^>]+>|&nbsp;|&#160;|\s)+"
 
 
 def _plugin_zip_path() -> Path | None:
@@ -87,7 +89,52 @@ class GentleInkFilter:
         self.contractions = {w.lower() for w in allowlist["contractions"]}
         self.tier1_words = {w.lower() for w in tier1["words"]}
         self.ambiguous = context.get("ambiguous", {})
+        self.phrases = context.get("phrases", [])
         self.substitutions = subs.get("profiles", {})
+
+    @staticmethod
+    def _should_filter_context(rules: dict, safe: int, profane: int) -> bool:
+        if profane > safe:
+            return True
+        if profane == safe and profane > 0:
+            return rules.get("defaultAction") != "skip"
+        if profane == 0 and safe == 0 and rules.get("defaultAction") == "context":
+            return True
+        return False
+
+    @staticmethod
+    def _build_phrase_regex(words: list[str], html_gap: str | None = None) -> str:
+        gap = html_gap if html_gap is not None else r"\s+"
+        return gap.join(re.escape(word) for word in words)
+
+    def apply_phrases(
+        self,
+        text: str,
+        profile: Profile = "family",
+        mode: Mode = "substitute",
+        mask_char: str = "*",
+        html_gap: str | None = None,
+    ) -> str:
+        if mode == "remove" or not self.phrases:
+            return text
+        out = text
+        for phrase in self.phrases:
+            replacement = phrase.get(profile) or phrase.get("family")
+            if not replacement:
+                continue
+            pattern = re.compile(
+                self._build_phrase_regex(phrase["words"], html_gap=html_gap),
+                flags=re.IGNORECASE,
+            )
+
+            def replacer(match: re.Match, repl=replacement) -> str:
+                original = match.group(0)
+                if mode == "mask":
+                    return mask_char * max(3, len(original))
+                return self._preserve_case(original, repl)
+
+            out = pattern.sub(replacer, out)
+        return out
 
     def analyze(self, text: str, profile: Profile = "family", window_size: int = 80) -> list[FilterMatch]:
         matches: list[FilterMatch] = []
@@ -116,14 +163,18 @@ class GentleInkFilter:
                 safe = sum(1 for p in rules.get("safePatterns", []) if re.search(p, ctx, re.I))
                 profane = sum(1 for p in rules.get("profanePatterns", []) if re.search(p, ctx, re.I))
 
-                should_filter = profane > safe or (profane == safe > 0 and rules.get("defaultAction") != "skip")
-                if should_filter:
-                    reason = f"profane context ({profane} > {safe})" if profane > safe else "ambiguous context tie-breaker"
+                if self._should_filter_context(rules, safe, profane):
+                    if profane > safe:
+                        reason = f"profane context ({profane} > {safe})"
+                    elif profane == safe and profane > 0:
+                        reason = "ambiguous context tie-breaker"
+                    else:
+                        reason = "expletive default (no safe context)"
                     matches.append(FilterMatch(token, lemma, start, end, 2, reason))
 
         return sorted(matches, key=lambda m: m.start)
 
-    def filter_text(
+    def filter_text_once(
         self,
         text: str,
         mode: Mode = "substitute",
@@ -150,6 +201,25 @@ class GentleInkFilter:
             out = out[:start] + replacement + out[end:]
             offset += len(replacement) - len(original)
         return out, matches
+
+    def filter_text(
+        self,
+        text: str,
+        mode: Mode = "substitute",
+        profile: Profile = "family",
+        mask_char: str = "*",
+        max_passes: int = MAX_PASSES,
+    ) -> tuple[str, list[FilterMatch]]:
+        out = text
+        all_matches: list[FilterMatch] = []
+        for _ in range(max_passes):
+            before = out
+            out = self.apply_phrases(out, profile, mode, mask_char)
+            out, pass_matches = self.filter_text_once(out, mode, profile, mask_char)
+            all_matches.extend(pass_matches)
+            if out == before and not pass_matches:
+                break
+        return out, all_matches
 
     def _inside_compound(self, text: str, start: int, end: int) -> bool:
         lower = text.lower()

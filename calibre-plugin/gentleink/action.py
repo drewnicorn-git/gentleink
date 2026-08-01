@@ -9,7 +9,7 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-from .filter_engine import GentleInkFilter
+from .filter_engine import HTML_GAP, MAX_PASSES, GentleInkFilter
 
 HTML_EXT = {".xhtml", ".html", ".htm"}
 FORMAT_PREFERENCE = ("epub", "azw3")
@@ -45,7 +45,7 @@ def _pick_format(formats: list[str]) -> str | None:
     return None
 
 
-def _filter_html(html: str, engine: GentleInkFilter, mode: str, profile: str) -> str:
+def _filter_html_text_nodes(html: str, engine: GentleInkFilter, mode: str, profile: str) -> str:
     def transform(text: str) -> str:
         filtered, _ = engine.filter_text(text, mode=mode, profile=profile)
         return filtered
@@ -62,6 +62,17 @@ def _filter_html(html: str, engine: GentleInkFilter, mode: str, profile: str) ->
         return ">" + filtered + "<"
 
     return pattern.sub(replacer, html)
+
+
+def _filter_html(html: str, engine: GentleInkFilter, mode: str, profile: str) -> str:
+    out = engine.apply_phrases(html, profile, mode, html_gap=HTML_GAP)
+    for _ in range(MAX_PASSES):
+        before = out
+        out = engine.apply_phrases(out, profile, mode, html_gap=HTML_GAP)
+        out = _filter_html_text_nodes(out, engine, mode, profile)
+        if out == before:
+            break
+    return out
 
 
 def clean_epub_file(path: str, engine: GentleInkFilter, mode: str = "substitute", profile: str = "family") -> int:

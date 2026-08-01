@@ -35,10 +35,23 @@ data class AmbiguousRules(
     val defaultAction: String = "skip"
 )
 
+data class PhraseRule(
+    val words: List<String>,
+    val family: String,
+    val religiousStrict: String,
+) {
+    fun replacement(profile: FilterProfile): String =
+        when (profile) {
+            FilterProfile.FAMILY -> family
+            FilterProfile.RELIGIOUS_STRICT -> religiousStrict
+        }
+}
+
 data class FilterConfig(
     val compounds: Set<String>,
     val contractions: Set<String>,
     val tier1Words: Set<String>,
     val ambiguous: Map<String, AmbiguousRules>,
+    val phrases: List<PhraseRule>,
     val substitutions: Map<String, Map<String, String>>
 )
