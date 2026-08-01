@@ -52,8 +52,9 @@ jobs:
         run: |
           mkdir -p dist
           cp core/data/*.json calibre-plugin/gentleink/core_data/
-          cd calibre-plugin && zip -r ../dist/gentleink-calibre-0.1.0.zip gentleink
-          cd ../koreader-plugin && zip -r ../dist/gentleink-koreader-0.1.0.zip gentleink.koplugin
+          cd calibre-plugin/gentleink && zip -r ../../dist/gentleink.zip .
+          cp ../../dist/gentleink.zip ../../dist/gentleink-calibre-0.1.1.zip
+          cd ../../koreader-plugin && zip -r ../dist/gentleink-koreader-0.1.1.zip gentleink.koplugin
           cd ..
           sha256sum dist/* > dist/SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
@@ -78,8 +79,9 @@ jobs:
           if [ -f release-assets/app-debug.apk ]; then
             cp release-assets/app-debug.apk upload/GentleInk-0.1.0.apk
           fi
-          cp release-assets/gentleink-calibre-0.1.0.zip upload/
-          cp release-assets/gentleink-koreader-0.1.0.zip upload/
+          cp release-assets/gentleink.zip upload/ 2>/dev/null || cp release-assets/gentleink-calibre-0.1.1.zip upload/gentleink.zip
+          cp release-assets/gentleink-calibre-0.1.1.zip upload/ 2>/dev/null || true
+          cp release-assets/gentleink-koreader-0.1.1.zip upload/
           cp release-assets/SHA256SUMS.txt upload/
           cp docs/INSTALL.md upload/INSTALL.md
           ls -la upload/

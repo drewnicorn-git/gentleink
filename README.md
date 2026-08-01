@@ -33,7 +33,7 @@ Named to avoid confusion with the 2015 *Clean Reader* app and the *CleanRead* Ca
 | Asset | For |
 |---|---|
 | `GentleInk-0.1.0.apk` | Android e-readers (Boox, Onyx, Xteink S4, etc.) |
-| `gentleink-calibre-0.1.0.zip` | Calibre desktop plugin |
+| `gentleink.zip` | Calibre desktop plugin (**use this file**, not the old nested zip) |
 | `gentleink-koreader-0.1.0.zip` | KOReader plugin |
 
 See [docs/INSTALL.md](docs/INSTALL.md) for install steps.

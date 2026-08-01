@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QComboBox, QFormLayout, QLabel, QVBoxLayout, QWidget
 
-from calibre_plugins.gentleink.config import plugin_prefs
-from calibre_plugins.gentleink.filter_engine import GentleInkFilter
+from .config import plugin_prefs
+from .filter_engine import GentleInkFilter
 
 
 class ConfigWidget(QWidget):

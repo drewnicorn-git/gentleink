@@ -34,13 +34,23 @@ GentleInk ships three components. Most e-reader users want the **Android APK**.
 
 ## Calibre plugin (desktop)
 
-1. Download `gentleink-calibre-0.1.0.zip`.
-2. Calibre → **Preferences → Plugins → Load plugin from file** → select the zip.
-3. Restart Calibre.
-4. **Preferences → Toolbars → The main toolbar** → add **GentleInk Language Filter**.
-5. Select books → click **GentleInk Clean** → send cleaned EPUB to your device.
+1. Download **`gentleink.zip`** from the release page (not a folder-wrapped zip).
+2. Calibre → **Preferences → Plugins → Load plugin from file** → select `gentleink.zip`.
+3. Restart Calibre when prompted.
+4. **Preferences → Toolbars & menus → The main toolbar** → add **GentleInk Clean**.
+5. Select books in your library → click **GentleInk Clean** → send cleaned EPUB to your device.
 
 Original files are backed up as `ORIGINAL_EPUB` inside each library entry.
+
+### Calibre install error: "must contain a top-level __init__.py"
+
+Older release zips (`gentleink-calibre-0.1.0.zip`) nested files inside a `gentleink/` folder, which Calibre rejects. Use **`gentleink.zip`** from v0.1.1 or later, or rebuild locally:
+
+```powershell
+.\scripts\package-release.ps1 -Version 0.1.1
+```
+
+Then load `dist\gentleink.zip` in Calibre.
 
 ---
 

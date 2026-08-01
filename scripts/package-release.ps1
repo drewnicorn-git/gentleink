@@ -68,25 +68,29 @@ if ((Test-Path $LocalProps) -and (Test-Path $Gradlew)) {
 
 # Step 4: Package Calibre + KOReader plugins
 Write-Host "`n[4/5] Packaging Calibre and KOReader plugins..." -ForegroundColor Yellow
-$CalibreZip = Join-Path $Dist "gentleink-calibre-$Version.zip"
 $KoreaderZip = Join-Path $Dist "gentleink-koreader-$Version.zip"
 
 $CalibreStaging = Join-Path $env:TEMP "gentleink-calibre-staging"
 $KoreaderStaging = Join-Path $env:TEMP "gentleink-koreader-staging"
 Remove-Item $CalibreStaging, $KoreaderStaging -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path $CalibreStaging | Out-Null
-New-Item -ItemType Directory -Force -Path (Join-Path $CalibreStaging "gentleink\core_data") | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $CalibreStaging "core_data") | Out-Null
 New-Item -ItemType Directory -Force -Path $KoreaderStaging | Out-Null
 
-Copy-Item (Join-Path $Root "calibre-plugin\gentleink\*") (Join-Path $CalibreStaging "gentleink") -Recurse -Force
-Copy-Item (Join-Path $Root "core\data\*.json") (Join-Path $CalibreStaging "gentleink\core_data") -Force
+# Calibre requires __init__.py at the ZIP root (not inside a subfolder).
+Copy-Item (Join-Path $Root "calibre-plugin\gentleink\*") $CalibreStaging -Recurse -Force
+Copy-Item (Join-Path $Root "core\data\*.json") (Join-Path $CalibreStaging "core_data") -Force
 Copy-Item (Join-Path $Root "koreader-plugin\gentleink.koplugin") (Join-Path $KoreaderStaging "gentleink.koplugin") -Recurse -Force
 
+$CalibreZip = Join-Path $Dist "gentleink.zip"
+$CalibreZipVersioned = Join-Path $Dist "gentleink-calibre-$Version.zip"
 if (Test-Path $CalibreZip) { Remove-Item $CalibreZip -Force }
+if (Test-Path $CalibreZipVersioned) { Remove-Item $CalibreZipVersioned -Force }
 if (Test-Path $KoreaderZip) { Remove-Item $KoreaderZip -Force }
-Compress-Archive -Path "$CalibreStaging\gentleink" -DestinationPath $CalibreZip -Force
+Compress-Archive -Path "$CalibreStaging\*" -DestinationPath $CalibreZip -Force
+Copy-Item $CalibreZip $CalibreZipVersioned -Force
 Compress-Archive -Path "$KoreaderStaging\*" -DestinationPath $KoreaderZip -Force
-Write-Host "  PASS: Calibre plugin -> gentleink-calibre-$Version.zip" -ForegroundColor Green
+Write-Host "  PASS: Calibre plugin -> gentleink.zip (load this file in Calibre)" -ForegroundColor Green
 Write-Host "  PASS: KOReader plugin -> gentleink-koreader-$Version.zip" -ForegroundColor Green
 
 # Step 5: Checksums

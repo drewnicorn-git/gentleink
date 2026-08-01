@@ -10,14 +10,14 @@ class GentleInkAction(InterfaceActionBase):
     description = "Filter profanity from selected ebooks using GentleInk context-aware rules"
     supported_platforms = ["windows", "osx", "linux"]
     author = "GentleInk"
-    version = (0, 1, 0)
+    version = (0, 1, 1)
     minimum_calibre_version = (6, 0, 0)
 
     def is_customizable(self):
         return True
 
     def config_widget(self):
-        from calibre_plugins.gentleink.config_widget import ConfigWidget
+        from .config_widget import ConfigWidget
         return ConfigWidget()
 
     def save_settings(self, config_widget):
@@ -34,7 +34,7 @@ class GentleInkAction(InterfaceActionBase):
 
     def run_clean(self):
         from qt.core import QMessageBox
-        from calibre_plugins.gentleink.action import clean_selected_books
+        from .action import clean_selected_books
 
         db = self.gui.current_db
         ids = self.gui.library_view.get_selected_ids()

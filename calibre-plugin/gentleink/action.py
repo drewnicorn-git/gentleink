@@ -9,7 +9,7 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-from calibre_plugins.gentleink.filter_engine import GentleInkFilter
+from .filter_engine import GentleInkFilter
 
 HTML_EXT = {".xhtml", ".html", ".htm"}
 
@@ -72,7 +72,7 @@ def backup_original(db, book_id, fmt: str) -> None:
 
 
 def clean_selected_books(db, book_ids, gui=None) -> list[dict]:
-    from calibre_plugins.gentleink.config import plugin_prefs
+    from .config import plugin_prefs
 
     mode = plugin_prefs.get("mode", "substitute")
     profile = plugin_prefs.get("profile", "family")
